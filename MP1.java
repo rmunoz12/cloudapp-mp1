@@ -1,8 +1,12 @@
 import java.io.File;
-import java.lang.reflect.Array;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+
+import java.nio.file.Path;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+
 
 public class MP1 {
     Random generator;
@@ -51,8 +55,52 @@ public class MP1 {
 
     public String[] process() throws Exception {
         String[] ret = new String[20];
-       
-        //TODO
+        Set<String> ignore = new HashSet<String>();
+        Collections.addAll(ignore, stopWordsArray);
+
+        Path filePath = new File(this.inputFileName).toPath();
+        Charset charset = Charset.defaultCharset();
+        List<String> stringList = Files.readAllLines(filePath, charset);
+
+        Map<String, Integer> wordCounts = new HashMap<String, Integer>();
+        Integer[] indexes = this.getIndexes();
+        for (Integer i : indexes) {
+            String line = stringList.get(i);
+            StringTokenizer st = new StringTokenizer(line, this.delimiters);
+            while (st.hasMoreElements()) {
+                String s = st.nextToken();
+                s = s.toLowerCase().trim();
+                if (ignore.contains(s)) {
+                    continue;
+                }
+                if (wordCounts.get(s) == null) {
+                    wordCounts.put(s, 1);
+                } else {
+                    int c = wordCounts.get(s);
+                    wordCounts.put(s, c + 1);
+                }
+            }
+        }
+
+        Comparator<Map.Entry<String, Integer>> byValCmp =
+                new Comparator<Map.Entry<String, Integer>>() {
+            @Override
+            public int compare(Map.Entry<String, Integer> left,
+                               Map.Entry<String, Integer> right) {
+                return right.getValue().compareTo(left.getValue());
+            }
+        };
+
+        List<Map.Entry<String, Integer>> wcList =
+                new ArrayList<Map.Entry<String, Integer>>(wordCounts.size());
+        wcList.addAll(wordCounts.entrySet());
+        Collections.sort(wcList, byValCmp);
+
+
+        for (int i = 0; i < 20; ++i) {
+            Map.Entry<String, Integer> entry = wcList.get(i);
+            ret[i] = entry.getKey();
+        }
 
         return ret;
     }
